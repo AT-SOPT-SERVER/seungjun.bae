@@ -1,7 +1,5 @@
 package org.sopt.util;
 
-import java.util.List;
-
 //선택과제 2 - id생성 기능 유틸 클래스로 분리
 //선택과제 5
 //txt파일과 연동하니까 다시 시작했을 때 id가 다시 0부터 시작하는 이슈 발생
