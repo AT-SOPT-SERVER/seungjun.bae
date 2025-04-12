@@ -102,7 +102,7 @@ public class PostRepository {
 
     public int findLastId(){
         List<Post> posts = this.bringFile("postlist.txt");
-        int maxId = 0;
+        int maxId = -1;
         for (Post post : posts){
             if(post.getId()>maxId){
                 maxId = post.getId();
