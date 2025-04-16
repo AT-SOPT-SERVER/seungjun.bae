@@ -3,6 +3,7 @@ package org.sopt.service;
 import org.sopt.domain.Post;
 import org.sopt.repository.PostRepository;
 import org.sopt.util.IdGenerator;
+import org.sopt.validation.PostValidator;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -14,30 +15,21 @@ public class PostService {
     private LocalDateTime latestPostTime = null;
 
     public void createPost(String title) {
-        //필수과제 2,3: 게시물 생성시
-        try {
-            if (title.isEmpty()) {
-                throw new IllegalArgumentException("제목을 입력해주세요");
+        try{
+            //도배 방지기능
+            PostValidator.postTime(latestPostTime);
+            //중복제목 방지
+            this.checkSameTitle(title);
+            //선택과제 5의 연장선..
+            // 프로그램 실행 후 처음에 idgenerator.id가 null값이니까 그럴 때 txt파일에서 가장 큰 id 찾아서 그거 +1해서 신규 게시물 id설정해줌
+            if(IdGenerator.getId()==null){
+                IdGenerator.setId(postRepository.findLastId());
             }
-            if (title.length()>30){
-                throw new IllegalArgumentException("제목은 최대 30자까지 작성할 수 있어요");
-            }
-            //선택과제 3 - 도배 방지
-            if(latestPostTime==null || Duration.between(latestPostTime , LocalDateTime.now()).toMinutes()>=3){
-                latestPostTime = LocalDateTime.now();
-                //선택과제 5의 연장선..
-                // 프로그램 실행 후 처음에 idgenerator.id가 null값이니까 그럴 때 txt파일에서 가장 큰 id 찾아서 그거 +1해서 신규 게시물 id설정해줌
-                if(IdGenerator.getId()==null){
-                    IdGenerator.setId(postRepository.findLastId());
-                }
-                //프로그램 실행 후 2번째부터는 id가 차있으니까, 그냥 전에꺼 +1한 값으로 id 정해줌
-                Post post = new Post(IdGenerator.newId(), title);
-                postRepository.save(post);
-            } else {
-                System.out.println((180-(int)Duration.between(latestPostTime , LocalDateTime.now()).getSeconds()) + "초 뒤에 게시물을 다시 작성할 수 있어요.");
-            }
-        } catch (IllegalArgumentException e){
-            System.out.println("에러 발생: "+e.getMessage());
+            //프로그램 실행 후 2번째부터는 id가 차있으니까, 그냥 전에꺼 +1한 값으로 id 정해줌
+            Post post = new Post(IdGenerator.newId(), title);
+            postRepository.save(post);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
         }
     }
 
@@ -54,18 +46,11 @@ public class PostService {
     }
 
     public boolean updateTitleById(int id, String newTitle){
-        //필수과제 2,3 : 게시글 수정 시
-        // 에러문 반환하더라도, catch에서 false를 반환하기 때문에 해당ID의 게시글이 존재하지 않습니다가 뜨는 문제 발생.
-        try {
-            if (newTitle.isEmpty()) {
-                throw new IllegalArgumentException("제목을 입력해주세요");
-            }
-            if (newTitle.length()>30){
-                throw new IllegalArgumentException("제목은 최대 30자까지 작성할 수 있어요");
-            }
+        try{
+            this.checkSameTitle(newTitle);
             return postRepository.updateById(id, newTitle);
         } catch (IllegalArgumentException e){
-            System.out.println("에러 발생: "+e.getMessage());
+            System.out.println(e.getMessage());
             return false;
         }
     }
@@ -74,5 +59,10 @@ public class PostService {
         return postRepository.searchByKeyword(keyword);
     }
 
+    public void checkSameTitle(String title){
+        if(postRepository.existsByTitle(title)){
+            throw new IllegalArgumentException("같은 제목의 게시물이 이미 존재합니다.");
+        }
+    }
 
 }

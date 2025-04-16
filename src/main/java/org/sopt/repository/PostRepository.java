@@ -7,33 +7,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PostRepository {
+    private final String fileName = "postlist.txt";
 
     public void save(Post reqPost) {
-        //선택과제 1 - 중복 게시물 불가
-        // 로직이기는 하지만, db에 있는 데이터의 유효성을 검증한 후 db에 추가하니까 repository에 있는게 낫지 않을까..?
-        //에러 반환하더라도 main을 건들지 않는 이상 게시글이 성공적으로 저장됐다고 뜨긴함... main을 건드려야되나?
-        List<Post> postList = this.bringFile("postlist.txt");
-        try {
-            for(Post post : postList){
-                if(reqPost.getTitle().equals(post.getTitle())){
-                    throw new IllegalArgumentException("같은 제목의 게시물이 이미 존재합니다.");
-                }
-            }
-            postList.add(reqPost);
-            saveToFile(postList, "postlist.txt");
-        } catch (IllegalArgumentException e){
-            System.out.println("예외 발생: "+e.getMessage());
-        }
-
+        List<Post> postList = this.bringFile(fileName);
+        postList.add(reqPost);
+        saveToFile(postList, fileName);
     }
 
     public List<Post> findAll() {
-        List<Post> postList = this.bringFile("postlist.txt");
+        List<Post> postList = this.bringFile(fileName);
         return postList;
     }
 
     public Post findById(int id){
-        List<Post> postList = this.bringFile("postlist.txt");
+        List<Post> postList = this.bringFile(fileName);
         for(Post post : postList) {
             if (post.getId() == id) {
                 return post;
@@ -42,12 +30,22 @@ public class PostRepository {
         return null;
     }
 
+    public boolean existsByTitle(String title){
+        List<Post> postList = this.bringFile(fileName);
+        for(Post post : postList) {
+            if (post.getTitle().equals(title)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public Boolean deleteById(int id){
-        List<Post> postList = this.bringFile("postlist.txt");
+        List<Post> postList = this.bringFile(fileName);
         for(Post post : postList){
             if (post.getId() == id){
                 postList.remove(post);
-                saveToFile(postList, "postlist.txt");
+                saveToFile(postList, fileName);
                 return true;
             }
         }
@@ -55,11 +53,11 @@ public class PostRepository {
     }
 
     public boolean updateById(int id, String newTitle){
-        List<Post> postList = this.bringFile("postlist.txt");
+        List<Post> postList = this.bringFile(fileName);
         for(Post post : postList){
             if(post.getId() == id){
                 post.setTitle(newTitle);
-                saveToFile(postList, "postlist.txt");
+                saveToFile(postList, fileName);
                 return true;
             }
         }
@@ -68,7 +66,7 @@ public class PostRepository {
 
     //선택과제 4: 검색기능 추가
     public List<Post> searchByKeyword(String keyword){
-        List<Post> postList = this.bringFile("postlist.txt");
+        List<Post> postList = this.bringFile(fileName);
         List<Post> searchedPosts = new ArrayList<>();
         for (Post post : postList){
             if(post.getTitle().contains(keyword)){
@@ -101,7 +99,7 @@ public class PostRepository {
     }
 
     public int findLastId(){
-        List<Post> posts = this.bringFile("postlist.txt");
+        List<Post> posts = this.bringFile(fileName);
         int maxId = -1;
         for (Post post : posts){
             if(post.getId()>maxId){
