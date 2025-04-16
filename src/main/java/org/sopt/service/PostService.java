@@ -2,34 +2,34 @@ package org.sopt.service;
 
 import org.sopt.domain.Post;
 import org.sopt.repository.PostRepository;
-import org.sopt.util.IdGenerator;
 import org.sopt.validation.PostValidator;
+import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 
+@Service
 public class PostService {
-    private PostRepository postRepository = new PostRepository();
+    private PostRepository postRepository;
     //작성 시간을 받아놓고 있다가, 다음 게시물이 작성되면 시간 비교해서 컷해줌.
     private LocalDateTime latestPostTime = null;
 
-    public void createPost(String title) {
+    public PostService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    public Long createPost(String title) {
+        //도배 방지기능
+        PostValidator.postTime(latestPostTime);
+        latestPostTime = LocalDateTime.now();
+        //중복제목 방지
+        this.checkSameTitle(title);
+
         try{
-            //도배 방지기능
-            PostValidator.postTime(latestPostTime);
-            //중복제목 방지
-            this.checkSameTitle(title);
-            //선택과제 5의 연장선..
-            // 프로그램 실행 후 처음에 idgenerator.id가 null값이니까 그럴 때 txt파일에서 가장 큰 id 찾아서 그거 +1해서 신규 게시물 id설정해줌
-            if(IdGenerator.getId()==null){
-                IdGenerator.setId(postRepository.findLastId());
-            }
-            //프로그램 실행 후 2번째부터는 id가 차있으니까, 그냥 전에꺼 +1한 값으로 id 정해줌
-            Post post = new Post(IdGenerator.newId(), title);
+            Post post = new Post(title);
             postRepository.save(post);
+            return post.getId();
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            throw new RuntimeException("사용자 정보를 읽어올 수 없습니다.");
         }
     }
 
