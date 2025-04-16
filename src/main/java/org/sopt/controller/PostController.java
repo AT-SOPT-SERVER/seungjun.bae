@@ -1,22 +1,20 @@
 package org.sopt.controller;
 
 import org.sopt.domain.Post;
+import org.sopt.dto.PostRequest;
 import org.sopt.service.PostService;
 import org.sopt.validation.PostValidator;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
 public class PostController {
     private final PostService postService = new PostService();
 
-    public void createPost(String title){
-        //제목 글자수 검사
-        try {
-            PostValidator.titleLength(title);
-            postService.createPost(title);
-        } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
-        }
+    @PostMapping("/post")
+    public void createPost(@RequestBody final PostRequest postRequest) {
+        postService.createPost(postRequest.getTitle());
     }
 
     public List<Post> getAllPosts(){
