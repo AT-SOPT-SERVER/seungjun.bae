@@ -1,13 +1,16 @@
 package org.sopt.controller;
 
 import org.sopt.domain.Post;
+import org.sopt.dto.ContentDto;
 import org.sopt.dto.request.ContentCreateRequest;
 import org.sopt.dto.response.ApiResponse;
 import org.sopt.dto.response.ContentCreateResponse;
+import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.service.PostService;
 import org.sopt.validation.PostValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -41,8 +44,18 @@ public class PostController {
         }
     }
 
-    public List<Post> getAllPosts(){
-        return postService.getAllPosts();
+    @GetMapping("api/v1/contents")
+    public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(){
+        try{
+            List<Post> rawContents = postService.getAllPosts();
+            List<ContentDto> contents = rawContents.stream().map(ContentDto::new).toList();
+            ContentReadResponse result = new ContentReadResponse(contents);
+            ApiResponse<ContentReadResponse> response = new ApiResponse<>(200,"전체 게시글이 조회되었습니다.", result);
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        } catch (Exception e) {
+            ApiResponse<ContentReadResponse> response = new ApiResponse<>(404, e.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
     }
 
     public Post getPostById(int postId){
