@@ -39,7 +39,7 @@ public class PostService {
         return postRepository.findAll();
     }
 
-    public Post getIdPost(int id){
+    public Post getIdPost(long id){
         return postRepository.findById(id);
     }
 

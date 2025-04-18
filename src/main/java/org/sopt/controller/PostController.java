@@ -10,10 +10,7 @@ import org.sopt.service.PostService;
 import org.sopt.validation.PostValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -51,15 +48,27 @@ public class PostController {
             List<ContentDto> contents = rawContents.stream().map(ContentDto::new).toList();
             ContentReadResponse result = new ContentReadResponse(contents);
             ApiResponse<ContentReadResponse> response = new ApiResponse<>(200,"전체 게시글이 조회되었습니다.", result);
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
-            ApiResponse<ContentReadResponse> response = new ApiResponse<>(404, e.getMessage());
+            ApiResponse<ContentReadResponse> response = new ApiResponse<>(404, "사용자 정보를 읽어올 수 없습니다.");
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         }
     }
 
-    public Post getPostById(int postId){
-        return postService.getIdPost(postId);
+    @GetMapping("api/v1/contents/{contentId}")
+    public ResponseEntity<ApiResponse<ContentDto>> getPostById(@PathVariable Long contentId){
+        try{
+            if(contentId == null){
+                throw new IllegalArgumentException("contentId가 필요합니다.");
+            }
+            Post post = postService.getIdPost(contentId);
+            ContentDto result = new ContentDto(post);
+            ApiResponse<ContentDto> response = new ApiResponse<>(200, "게시글 상세 조회", result);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }catch(Exception e){
+            ApiResponse<ContentDto> response = new ApiResponse<>(404, "사용자 정보를 읽어올 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        }
     }
 
     public Boolean deletePostById(int postId){
