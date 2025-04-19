@@ -1,8 +1,11 @@
 package org.sopt.service;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.sopt.domain.Post;
 import org.sopt.dto.ContentDto;
+import org.sopt.dto.request.ContentCreateRequest;
+import org.sopt.dto.response.ContentCreateResponse;
 import org.sopt.repository.PostRepository;
 import org.sopt.validation.PostValidator;
 import org.springframework.stereotype.Service;
@@ -11,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
+@Transactional
 public class PostService {
     private PostRepository postRepository;
     //작성 시간을 받아놓고 있다가, 다음 게시물이 작성되면 시간 비교해서 컷해줌.
@@ -20,7 +24,9 @@ public class PostService {
         this.postRepository = postRepository;
     }
 
-    public Long createPost(String title) {
+    public ContentCreateResponse createPost(ContentCreateRequest request) {
+        String title = request.getTitle();
+        PostValidator.titleLength(title);
         //도배 방지기능
         PostValidator.postTime(latestPostTime);
         latestPostTime = LocalDateTime.now();
@@ -30,7 +36,7 @@ public class PostService {
         try{
             Post post = new Post(title);
             postRepository.save(post);
-            return post.getId();
+            return new ContentCreateResponse(post.getId());
         } catch (IllegalArgumentException e) {
             throw new RuntimeException("사용자 정보를 읽어올 수 없습니다.");
         }
@@ -42,7 +48,7 @@ public class PostService {
 
     public Post getIdPost(long id){
         return postRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException("해당 게시글이 없습니다. id=" + id)
+                () -> new EntityNotFoundException()
                 );
     }
 
@@ -53,15 +59,15 @@ public class PostService {
         postRepository.deleteById(id);
     }
 
-//    public boolean updateTitleById(int id, String newTitle){
-//        try{
-//            this.checkSameTitle(newTitle);
-//            return postRepository.updateById(id, newTitle);
-//        } catch (IllegalArgumentException e){
-//            System.out.println(e.getMessage());
-//            return false;
-//        }
-//    }
+    public ContentDto updateTitleById(Long id, ContentCreateRequest request){
+        String newTitle = request.getTitle();
+        PostValidator.titleLength(newTitle);
+        this.checkSameTitle(newTitle);
+
+        Post post = postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        post.setTitle(newTitle);
+        return new ContentDto(post);
+    }
 //
 //    public List<Post> searchByKeyword(String keyword){
 //        return postRepository.searchByKeyword(keyword);

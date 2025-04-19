@@ -2,8 +2,6 @@ package org.sopt.dto;
 
 import org.sopt.domain.Post;
 
-import java.util.List;
-
 public class ContentDto {
     private long contentId;
     private String title;
