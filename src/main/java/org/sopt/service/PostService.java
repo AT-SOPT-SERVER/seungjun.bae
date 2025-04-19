@@ -6,6 +6,7 @@ import org.sopt.domain.Post;
 import org.sopt.dto.ContentDto;
 import org.sopt.dto.request.ContentCreateRequest;
 import org.sopt.dto.response.ContentCreateResponse;
+import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.repository.PostRepository;
 import org.sopt.validation.PostValidator;
 import org.springframework.stereotype.Service;
@@ -68,10 +69,13 @@ public class PostService {
         post.setTitle(newTitle);
         return new ContentDto(post);
     }
-//
-//    public List<Post> searchByKeyword(String keyword){
-//        return postRepository.searchByKeyword(keyword);
-//    }
+
+    public ContentReadResponse searchByKeyword(String keyword){
+        if(postRepository.findByTitleContaining(keyword).isEmpty()){
+            throw new EntityNotFoundException();
+        }
+        return new ContentReadResponse(postRepository.findByTitleContaining(keyword).stream().map(ContentDto::new).toList());
+    }
 
     public void checkSameTitle(String title){
         if(postRepository.existsByTitle(title)){

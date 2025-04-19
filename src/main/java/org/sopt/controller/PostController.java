@@ -29,13 +29,20 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             ApiResponse<ContentCreateResponse> response = new ApiResponse<>(404, e.getMessage());
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 
     @GetMapping("/api/v1/contents")
-    public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(){
+    public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(@RequestParam(required = false) String keyword){
         try{
+            //키워드 검색기능
+            if(keyword != null && !keyword.isBlank()){
+                ApiResponse<ContentReadResponse> response= new ApiResponse<>(200, "키워드로 게시글 검색 성공", postService.searchByKeyword(keyword));
+                return ResponseEntity.status(HttpStatus.OK).body(response);
+            }
+
+            //전체 게시글 조회
             List<Post> rawContents = postService.getAllPosts();
             List<ContentDto> contents = rawContents.stream().map(ContentDto::new).toList();
             ContentReadResponse result = new ContentReadResponse(contents);
@@ -43,7 +50,7 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.OK).body(response);
         } catch (Exception e) {
             ApiResponse<ContentReadResponse> response = new ApiResponse<>(404, "사용자 정보를 읽어올 수 없습니다.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 
@@ -82,8 +89,4 @@ public class PostController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
-//
-//    public List<Post> searchPostsByKeyword(String keyword){
-//        return postService.searchByKeyword(keyword);
-//    }
 }
