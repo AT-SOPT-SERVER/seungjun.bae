@@ -1,5 +1,6 @@
 package org.sopt.service;
 
+import jakarta.persistence.EntityNotFoundException;
 import org.sopt.domain.Post;
 import org.sopt.dto.ContentDto;
 import org.sopt.repository.PostRepository;
@@ -40,26 +41,31 @@ public class PostService {
     }
 
     public Post getIdPost(long id){
-        return postRepository.findById(id);
+        return postRepository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException("해당 게시글이 없습니다. id=" + id)
+                );
     }
 
-    public Boolean deleteIdPost(int id){
-        return postRepository.deleteById(id);
-    }
-
-    public boolean updateTitleById(int id, String newTitle){
-        try{
-            this.checkSameTitle(newTitle);
-            return postRepository.updateById(id, newTitle);
-        } catch (IllegalArgumentException e){
-            System.out.println(e.getMessage());
-            return false;
+    public void deleteIdPost(long id){
+        if (!postRepository.existsById(id)){
+            throw new EntityNotFoundException();
         }
+        postRepository.deleteById(id);
     }
 
-    public List<Post> searchByKeyword(String keyword){
-        return postRepository.searchByKeyword(keyword);
-    }
+//    public boolean updateTitleById(int id, String newTitle){
+//        try{
+//            this.checkSameTitle(newTitle);
+//            return postRepository.updateById(id, newTitle);
+//        } catch (IllegalArgumentException e){
+//            System.out.println(e.getMessage());
+//            return false;
+//        }
+//    }
+//
+//    public List<Post> searchByKeyword(String keyword){
+//        return postRepository.searchByKeyword(keyword);
+//    }
 
     public void checkSameTitle(String title){
         if(postRepository.existsByTitle(title)){

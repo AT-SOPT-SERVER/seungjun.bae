@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -41,7 +42,7 @@ public class PostController {
         }
     }
 
-    @GetMapping("api/v1/contents")
+    @GetMapping("/api/v1/contents")
     public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(){
         try{
             List<Post> rawContents = postService.getAllPosts();
@@ -55,38 +56,43 @@ public class PostController {
         }
     }
 
-    @GetMapping("api/v1/contents/{contentId}")
+    @GetMapping("/api/v1/contents/{contentId}")
     public ResponseEntity<ApiResponse<ContentDto>> getPostById(@PathVariable Long contentId){
         try{
-            if(contentId == null){
-                throw new IllegalArgumentException("contentId가 필요합니다.");
-            }
             Post post = postService.getIdPost(contentId);
             ContentDto result = new ContentDto(post);
             ApiResponse<ContentDto> response = new ApiResponse<>(200, "게시글 상세 조회", result);
             return ResponseEntity.status(HttpStatus.OK).body(response);
         }catch(Exception e){
             ApiResponse<ContentDto> response = new ApiResponse<>(404, "사용자 정보를 읽어올 수 없습니다.");
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 
-    public Boolean deletePostById(int postId){
-        return postService.deleteIdPost(postId);
-    }
-
-    public boolean updatePostTitle(int id, String newTitle){
-        //제목 글자수 검사
-        try {
-            PostValidator.titleLength(newTitle);
-            return postService.updateTitleById(id, newTitle);
-        } catch (IllegalArgumentException e){
-            System.out.println(e.getMessage());
-            return false;
+    @DeleteMapping("/api/v1/contents/{contentId}")
+    public ResponseEntity<ApiResponse<Void>> deletePostById(@PathVariable Long contentId){
+        try{
+            postService.deleteIdPost(contentId);
+            ApiResponse<Void> response = new ApiResponse<>(200, "게시글이 삭제되었습니다.", null);
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        }catch (Exception e){
+            ApiResponse<Void> response = new ApiResponse<>(404, "사용자 정보를 읽어올 수 없습니다.");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
         }
     }
 
-    public List<Post> searchPostsByKeyword(String keyword){
-        return postService.searchByKeyword(keyword);
-    }
+//    public boolean updatePostTitle(int id, String newTitle){
+//        //제목 글자수 검사
+//        try {
+//            PostValidator.titleLength(newTitle);
+//            return postService.updateTitleById(id, newTitle);
+//        } catch (IllegalArgumentException e){
+//            System.out.println(e.getMessage());
+//            return false;
+//        }
+//    }
+//
+//    public List<Post> searchPostsByKeyword(String keyword){
+//        return postService.searchByKeyword(keyword);
+//    }
 }
