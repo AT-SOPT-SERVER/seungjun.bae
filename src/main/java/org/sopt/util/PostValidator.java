@@ -1,4 +1,4 @@
-package org.sopt.validation;
+package org.sopt.util;
 
 import java.time.Duration;
 import java.time.LocalDateTime;

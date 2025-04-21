@@ -8,7 +8,7 @@ import org.sopt.dto.request.ContentCreateRequest;
 import org.sopt.dto.response.ContentCreateResponse;
 import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.repository.PostRepository;
-import org.sopt.validation.PostValidator;
+import org.sopt.util.PostValidator;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -43,14 +43,15 @@ public class PostService {
         }
     }
 
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+    public ContentReadResponse getAllPosts() {
+        List<Post> rawContents = postRepository.findAll();
+        List<ContentDto> contents = rawContents.stream().map(ContentDto::new).toList();
+        return new ContentReadResponse(contents);
     }
 
-    public Post getIdPost(long id){
-        return postRepository.findById(id).orElseThrow(
-                () -> new EntityNotFoundException()
-                );
+    public ContentDto getIdPost(long id){
+        Post post = postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        return new ContentDto(post);
     }
 
     public void deleteIdPost(long id){
