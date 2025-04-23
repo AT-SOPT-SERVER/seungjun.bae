@@ -35,7 +35,7 @@ public class PostController {
         try{
             //키워드 검색기능
             if(keyword != null && !keyword.isBlank()){
-                success(HttpStatus.OK, "키워드로 게시글 검색 성공", postService.searchByKeyword(keyword));
+                return success(HttpStatus.OK, "키워드로 게시글 검색 성공", postService.searchByKeyword(keyword));
             }
 
             //전체 게시글 조회

@@ -17,8 +17,7 @@ import java.util.List;
 @Service
 @Transactional
 public class PostService {
-    private PostRepository postRepository;
-    //작성 시간을 받아놓고 있다가, 다음 게시물이 작성되면 시간 비교해서 컷해줌.
+    private final PostRepository postRepository;
     private LocalDateTime latestPostTime = null;
 
     public PostService(PostRepository postRepository) {
@@ -26,12 +25,14 @@ public class PostService {
     }
 
     public ContentCreateResponse createPost(ContentCreateRequest request) {
-        String title = request.getTitle();
-        PostValidator.titleLength(title);
+        String title = request.title();
+
         //도배 방지기능
         PostValidator.postTime(latestPostTime);
         latestPostTime = LocalDateTime.now();
-        //중복제목 방지
+
+        //제목 유효성 검사
+        PostValidator.titleLength(title);
         this.checkSameTitle(title);
 
         try{
@@ -62,7 +63,8 @@ public class PostService {
     }
 
     public ContentDto updateTitleById(Long id, ContentCreateRequest request){
-        String newTitle = request.getTitle();
+        String newTitle = request.title();
+        //제목 유효성검사
         PostValidator.titleLength(newTitle);
         this.checkSameTitle(newTitle);
 
