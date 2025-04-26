@@ -1,62 +1,83 @@
 package org.sopt.service;
 
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.sopt.domain.Post;
+import org.sopt.dto.ContentDto;
+import org.sopt.dto.request.ContentCreateRequest;
+import org.sopt.dto.response.ContentCreateResponse;
+import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.repository.PostRepository;
-import org.sopt.util.IdGenerator;
-import org.sopt.validation.PostValidator;
+import org.sopt.util.PostValidator;
+import org.springframework.stereotype.Service;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Service
+@Transactional
 public class PostService {
-    private PostRepository postRepository = new PostRepository();
-    //작성 시간을 받아놓고 있다가, 다음 게시물이 작성되면 시간 비교해서 컷해줌.
+    private final PostRepository postRepository;
     private LocalDateTime latestPostTime = null;
 
-    public void createPost(String title) {
+    public PostService(PostRepository postRepository) {
+        this.postRepository = postRepository;
+    }
+
+    public ContentCreateResponse createPost(ContentCreateRequest request) {
+        String title = request.title();
+
+        //도배 방지기능
+        PostValidator.postTime(latestPostTime);
+        latestPostTime = LocalDateTime.now();
+
+        //제목 유효성 검사
+        PostValidator.titleLength(title);
+        this.checkSameTitle(title);
+
         try{
-            //도배 방지기능
-            PostValidator.postTime(latestPostTime);
-            //중복제목 방지
-            this.checkSameTitle(title);
-            //선택과제 5의 연장선..
-            // 프로그램 실행 후 처음에 idgenerator.id가 null값이니까 그럴 때 txt파일에서 가장 큰 id 찾아서 그거 +1해서 신규 게시물 id설정해줌
-            if(IdGenerator.getId()==null){
-                IdGenerator.setId(postRepository.findLastId());
-            }
-            //프로그램 실행 후 2번째부터는 id가 차있으니까, 그냥 전에꺼 +1한 값으로 id 정해줌
-            Post post = new Post(IdGenerator.newId(), title);
+            Post post = new Post(title);
             postRepository.save(post);
+            return new ContentCreateResponse(post.getId());
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage());
+            throw new RuntimeException("사용자 정보를 읽어올 수 없습니다.");
         }
     }
 
-    public List<Post> getAllPosts() {
-        return postRepository.findAll();
+    public ContentReadResponse getAllPosts() {
+        List<Post> rawContents = postRepository.findAll();
+        List<ContentDto> contents = rawContents.stream().map(ContentDto::new).toList();
+        return new ContentReadResponse(contents);
     }
 
-    public Post getIdPost(int id){
-        return postRepository.findById(id);
+    public ContentDto getIdPost(long id){
+        Post post = postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        return new ContentDto(post);
     }
 
-    public Boolean deleteIdPost(int id){
-        return postRepository.deleteById(id);
-    }
-
-    public boolean updateTitleById(int id, String newTitle){
-        try{
-            this.checkSameTitle(newTitle);
-            return postRepository.updateById(id, newTitle);
-        } catch (IllegalArgumentException e){
-            System.out.println(e.getMessage());
-            return false;
+    public void deleteIdPost(long id){
+        if (!postRepository.existsById(id)){
+            throw new EntityNotFoundException();
         }
+        postRepository.deleteById(id);
     }
 
-    public List<Post> searchByKeyword(String keyword){
-        return postRepository.searchByKeyword(keyword);
+    public ContentDto updateTitleById(Long id, ContentCreateRequest request){
+        String newTitle = request.title();
+        //제목 유효성검사
+        PostValidator.titleLength(newTitle);
+        this.checkSameTitle(newTitle);
+
+        Post post = postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        post.setTitle(newTitle);
+        return new ContentDto(post);
+    }
+
+    public ContentReadResponse searchByKeyword(String keyword){
+        if(postRepository.findByTitleContaining(keyword).isEmpty()){
+            throw new EntityNotFoundException();
+        }
+        return new ContentReadResponse(postRepository.findByTitleContaining(keyword).stream().map(ContentDto::new).toList());
     }
 
     public void checkSameTitle(String title){

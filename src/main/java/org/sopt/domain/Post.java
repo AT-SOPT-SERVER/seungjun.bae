@@ -1,22 +1,30 @@
 package org.sopt.domain;
 
-import java.io.Serializable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 
-public class Post implements Serializable {
-    private int id;
+@Entity
+public class Post {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     private String title;
 
-    public Post(int id, String title) {
-        this.id = id;
+    public Post(){
+    }
+
+    public Post(String title) {
         this.title = title;
     }
 
-    public int getId() {
+    public Long getId() {
         return id;
     }
 
     public String getTitle() {
-        return title;
+        return this.title;
     }
 
     public void setTitle(String title) {
