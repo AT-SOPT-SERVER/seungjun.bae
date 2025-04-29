@@ -7,6 +7,8 @@ import org.sopt.dto.ContentDto;
 import org.sopt.dto.request.ContentCreateRequest;
 import org.sopt.dto.response.ContentCreateResponse;
 import org.sopt.dto.response.ContentReadResponse;
+import org.sopt.exception.ErrorCode;
+import org.sopt.exception.InvalidRequestException;
 import org.sopt.repository.PostRepository;
 import org.sopt.util.PostValidator;
 import org.springframework.stereotype.Service;
@@ -35,13 +37,9 @@ public class PostService {
         PostValidator.titleLength(title);
         this.checkSameTitle(title);
 
-        try{
-            Post post = new Post(title);
-            postRepository.save(post);
-            return new ContentCreateResponse(post.getId());
-        } catch (IllegalArgumentException e) {
-            throw new RuntimeException("사용자 정보를 읽어올 수 없습니다.");
-        }
+        Post post = new Post(title);
+        postRepository.save(post);
+        return new ContentCreateResponse(post.getId());
     }
 
     public ContentReadResponse getAllPosts() {
@@ -51,13 +49,13 @@ public class PostService {
     }
 
     public ContentDto getIdPost(long id){
-        Post post = postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        Post post = postRepository.findById(id).orElseThrow(() -> new InvalidRequestException(ErrorCode.ID_NOT_FOUND));
         return new ContentDto(post);
     }
 
     public void deleteIdPost(long id){
         if (!postRepository.existsById(id)){
-            throw new EntityNotFoundException();
+            throw new InvalidRequestException(ErrorCode.ID_NOT_FOUND);
         }
         postRepository.deleteById(id);
     }
@@ -68,21 +66,21 @@ public class PostService {
         PostValidator.titleLength(newTitle);
         this.checkSameTitle(newTitle);
 
-        Post post = postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException());
+        Post post = postRepository.findById(id).orElseThrow(() -> new InvalidRequestException(ErrorCode.ID_NOT_FOUND));
         post.setTitle(newTitle);
         return new ContentDto(post);
     }
 
     public ContentReadResponse searchByKeyword(String keyword){
         if(postRepository.findByTitleContaining(keyword).isEmpty()){
-            throw new EntityNotFoundException();
+            throw new InvalidRequestException(ErrorCode.KEYWORD_NOT_FOUND);
         }
         return new ContentReadResponse(postRepository.findByTitleContaining(keyword).stream().map(ContentDto::new).toList());
     }
 
     public void checkSameTitle(String title){
         if(postRepository.existsByTitle(title)){
-            throw new IllegalArgumentException("같은 제목의 게시물이 이미 존재합니다.");
+            throw new InvalidRequestException(ErrorCode.DUPLICATE_TITLE);
         }
     }
 

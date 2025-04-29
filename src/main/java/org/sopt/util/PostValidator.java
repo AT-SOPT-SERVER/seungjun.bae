@@ -1,5 +1,8 @@
 package org.sopt.util;
 
+import org.sopt.exception.ErrorCode;
+import org.sopt.exception.InvalidRequestException;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 
@@ -7,18 +10,17 @@ public class PostValidator {
 
     public static void titleLength(String title){
         if (title.isEmpty()) {
-            throw new IllegalArgumentException("제목을 입력해주세요");
+            throw new InvalidRequestException(ErrorCode.EMPTY_TITLE);
         }
         if (title.length()>30){
-            throw new IllegalArgumentException("제목은 최대 30자까지 작성할 수 있어요");
+            throw new InvalidRequestException(ErrorCode.LONG_TITLE);
         }
     }
 
     public static void postTime(LocalDateTime latestPostTime){
         if(latestPostTime==null || Duration.between(latestPostTime , LocalDateTime.now()).toMinutes()>=3) {
         } else {
-            throw new IllegalArgumentException((180-(int)Duration.between(latestPostTime , LocalDateTime.now()).getSeconds()) + "초 뒤에 게시물을 다시 작성할 수 있어요.");
+            throw new InvalidRequestException(ErrorCode.POST_TIME_RESTRICTION);
         }
     }
-
 }
