@@ -7,7 +7,6 @@ import org.sopt.dto.response.ContentCreateResponse;
 import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.exception.SuccessCode;
 import org.sopt.service.PostService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,16 +21,16 @@ public class PostController {
     }
 
     @PostMapping("/api/v1/contents")
-    public ResponseEntity<ApiResponse<ContentCreateResponse>> createPost(@RequestBody ContentCreateRequest request) {
-        return success(SuccessCode.CREATE_CONTENT.getStatus(), SuccessCode.CREATE_CONTENT.getMessage(), postService.createPost(request));
+    public ResponseEntity<ApiResponse<ContentCreateResponse>> createPost(@RequestHeader Long userId, @RequestBody ContentCreateRequest request) {
+        return success(SuccessCode.CREATE_CONTENT.getStatus(), SuccessCode.CREATE_CONTENT.getMessage(), postService.createPost(request, userId));
     }
 
     @GetMapping("/api/v1/contents")
     public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(@RequestParam(required = false) String keyword){
-        //키워드 검색기능
-        if(keyword != null && !keyword.isBlank()){
-            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByKeyword(keyword));
-        }
+//        //키워드 검색기능
+//        if(keyword != null && !keyword.isBlank()){
+//            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByKeyword(keyword));
+//        }
         //전체 게시글 조회
         return success(SuccessCode.GET_ALL_CONTENT.getStatus(), SuccessCode.GET_ALL_CONTENT.getMessage(), postService.getAllPosts());
     }

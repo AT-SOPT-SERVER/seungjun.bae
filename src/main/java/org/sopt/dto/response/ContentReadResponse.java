@@ -1,6 +1,7 @@
 package org.sopt.dto.response;
 
-import org.sopt.dto.ContentDto;
+import org.sopt.dto.ContentListDto;
+
 import java.util.List;
 
-public record ContentReadResponse (List<ContentDto> contentList) {}
+public record ContentReadResponse (List<ContentListDto> contentList) {}
