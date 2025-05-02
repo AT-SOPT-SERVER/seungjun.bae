@@ -1,6 +1,9 @@
 package org.sopt.domain;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 public class Post {
@@ -13,6 +16,10 @@ public class Post {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @CreationTimestamp
+    @Column(name="post_time", nullable = false)
+    private LocalDateTime postTime;
+
     public Post(){
     }
 
@@ -20,6 +27,11 @@ public class Post {
         this.title = title;
         this.body = body;
         this.user = user;
+    }
+
+    @PrePersist
+    protected void OnCreate(){
+        this.postTime = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -36,6 +48,10 @@ public class Post {
 
     public String getBody() {
         return body;
+    }
+
+    public LocalDateTime getPostTime() {
+        return postTime;
     }
 
     public void setTitle(String title) {

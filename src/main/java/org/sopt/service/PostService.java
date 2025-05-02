@@ -58,7 +58,7 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public ContentReadResponse getAllPosts() {
-        List<Post> rawContents = postRepository.findAll();
+        List<Post> rawContents = postRepository.findAllByOrderByPostTimeDesc();
         List<ContentListDto> contents = rawContents.stream().map(ContentListDto::new).toList();
         return new ContentReadResponse(contents);
     }
