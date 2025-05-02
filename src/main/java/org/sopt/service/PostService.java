@@ -92,14 +92,21 @@ public class PostService {
         return new ContentDto(post);
     }
 
-//    검색기능 너 잠깐 열외다
-//    @Transactional(readOnly = true)
-//    public ContentReadResponse searchByKeyword(String keyword){
-//        if(postRepository.findByTitleContaining(keyword).isEmpty()){
-//            throw new InvalidRequestException(ErrorCode.KEYWORD_NOT_FOUND);
-//        }
-//        return new ContentReadResponse(postRepository.findByTitleContaining(keyword).stream().map(ContentDto::new).toList());
-//    }
+    @Transactional(readOnly = true)
+    public ContentReadResponse searchByUser(Long id){
+        if(!userRepository.existsById(id)){
+            throw new InvalidRequestException(ErrorCode.USER_NOT_FOUND);
+        }
+        return new ContentReadResponse(postRepository.findAllByUser_IdOrderByPostTimeDesc(id).stream().map(ContentListDto::new).toList());
+    }
+
+    @Transactional(readOnly = true)
+    public ContentReadResponse searchByKeyword(String keyword){
+        if(!postRepository.existsByTitleContaining(keyword)){
+            throw new InvalidRequestException(ErrorCode.KEYWORD_NOT_FOUND);
+        }
+        return new ContentReadResponse(postRepository.findAllByTitleContaining(keyword).stream().map(ContentListDto::new).toList());
+    }
 
     private void checkSameTitle(String title){
         if(postRepository.existsByTitle(title)){

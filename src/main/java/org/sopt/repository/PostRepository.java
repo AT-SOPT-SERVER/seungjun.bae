@@ -9,5 +9,9 @@ import java.util.List;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     boolean existsByTitle(String title);
+    boolean existsByTitleContaining(String keyword);
     List<Post> findAllByOrderByPostTimeDesc();
+    List<Post> findAllByUser_IdOrderByPostTimeDesc(Long id);
+    List<Post> findAllByTitleContaining(String keyword);
+    List<Post> id(Long id);
 }

@@ -26,11 +26,15 @@ public class PostController {
     }
 
     @GetMapping("/api/v1/contents")
-    public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(@RequestParam(required = false) String keyword){
-//        //키워드 검색기능
-//        if(keyword != null && !keyword.isBlank()){
-//            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByKeyword(keyword));
-//        }
+    public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(@RequestHeader(required = false) Long userId, @RequestParam(required = false) String keyword){
+        //user기준 검색
+        if(userId!=null){
+            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByUser(userId));
+        }
+        //키워드 검색
+        if(keyword != null && !keyword.isBlank()){
+            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByKeyword(keyword));
+        }
         //전체 게시글 조회
         return success(SuccessCode.GET_ALL_CONTENT.getStatus(), SuccessCode.GET_ALL_CONTENT.getMessage(), postService.getAllPosts());
     }
