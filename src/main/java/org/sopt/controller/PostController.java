@@ -7,7 +7,6 @@ import org.sopt.dto.response.ContentCreateResponse;
 import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.exception.SuccessCode;
 import org.sopt.service.PostService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,13 +21,17 @@ public class PostController {
     }
 
     @PostMapping("/api/v1/contents")
-    public ResponseEntity<ApiResponse<ContentCreateResponse>> createPost(@RequestBody ContentCreateRequest request) {
-        return success(SuccessCode.CREATE_CONTENT.getStatus(), SuccessCode.CREATE_CONTENT.getMessage(), postService.createPost(request));
+    public ResponseEntity<ApiResponse<ContentCreateResponse>> createPost(@RequestHeader Long userId, @RequestBody ContentCreateRequest request) {
+        return success(SuccessCode.CREATE_CONTENT.getStatus(), SuccessCode.CREATE_CONTENT.getMessage(), postService.createPost(request, userId));
     }
 
     @GetMapping("/api/v1/contents")
-    public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(@RequestParam(required = false) String keyword){
-        //키워드 검색기능
+    public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(@RequestHeader(required = false) Long userId, @RequestParam(required = false) String keyword){
+        //user기준 검색
+        if(userId!=null){
+            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByUser(userId));
+        }
+        //키워드 검색
         if(keyword != null && !keyword.isBlank()){
             return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByKeyword(keyword));
         }

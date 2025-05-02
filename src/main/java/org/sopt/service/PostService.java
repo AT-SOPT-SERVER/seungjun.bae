@@ -1,84 +1,114 @@
 package org.sopt.service;
 
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import org.sopt.domain.Post;
+import org.sopt.domain.User;
 import org.sopt.dto.ContentDto;
+import org.sopt.dto.ContentListDto;
 import org.sopt.dto.request.ContentCreateRequest;
 import org.sopt.dto.response.ContentCreateResponse;
 import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.exception.ErrorCode;
 import org.sopt.exception.InvalidRequestException;
 import org.sopt.repository.PostRepository;
-import org.sopt.util.PostValidator;
+import org.sopt.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
+import static org.sopt.util.Validator.PostValidator.isBodyValid;
+import static org.sopt.util.Validator.PostValidator.isTitleValid;
+import static org.sopt.util.Validator.UserValidator.isIdValid;
+
 @Service
-@Transactional
 public class PostService {
     private final PostRepository postRepository;
-    private LocalDateTime latestPostTime = null;
+    private final UserRepository userRepository;
 
-    public PostService(PostRepository postRepository) {
+//    private LocalDateTime latestPostTime = null;
+
+    public PostService(PostRepository postRepository, UserRepository userRepository) {
         this.postRepository = postRepository;
+        this.userRepository = userRepository;
     }
 
-    public ContentCreateResponse createPost(ContentCreateRequest request) {
+    @Transactional
+    public ContentCreateResponse createPost(ContentCreateRequest request, Long userId) {
         String title = request.title();
+        String body = request.body();
 
-        //도배 방지기능
-        PostValidator.postTime(latestPostTime);
-        latestPostTime = LocalDateTime.now();
+        //User가 있는지 검증
+        isIdValid(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new InvalidRequestException(ErrorCode.USER_NOT_FOUND));
 
-        //제목 유효성 검사
-        PostValidator.titleLength(title);
+//        //도배 방지기능//개쳐비상 이거 잠깐 보류//이건 user별로 시간을 갖고 있어야될텐데
+//        PostValidator.postTime(latestPostTime);
+//        latestPostTime = LocalDateTime.now();
+
+        isTitleValid(title);
         this.checkSameTitle(title);
 
-        Post post = new Post(title);
+        isBodyValid(body);
+
+        Post post = new Post(title, body, user);
         postRepository.save(post);
         return new ContentCreateResponse(post.getId());
     }
 
+    @Transactional(readOnly = true)
     public ContentReadResponse getAllPosts() {
-        List<Post> rawContents = postRepository.findAll();
-        List<ContentDto> contents = rawContents.stream().map(ContentDto::new).toList();
+        List<Post> rawContents = postRepository.findAllByOrderByPostTimeDesc();
+        List<ContentListDto> contents = rawContents.stream().map(ContentListDto::new).toList();
         return new ContentReadResponse(contents);
     }
 
+    @Transactional(readOnly = true)
     public ContentDto getIdPost(long id){
-        Post post = postRepository.findById(id).orElseThrow(() -> new InvalidRequestException(ErrorCode.ID_NOT_FOUND));
+        Post post = postRepository.findById(id).orElseThrow(() -> new InvalidRequestException(ErrorCode.CONTENT_NOT_FOUND));
         return new ContentDto(post);
     }
 
+    @Transactional
     public void deleteIdPost(long id){
         if (!postRepository.existsById(id)){
-            throw new InvalidRequestException(ErrorCode.ID_NOT_FOUND);
+            throw new InvalidRequestException(ErrorCode.CONTENT_NOT_FOUND);
         }
         postRepository.deleteById(id);
     }
 
+    @Transactional
     public ContentDto updateTitleById(Long id, ContentCreateRequest request){
         String newTitle = request.title();
-        //제목 유효성검사
-        PostValidator.titleLength(newTitle);
-        this.checkSameTitle(newTitle);
+        String newBody = request.body();
 
-        Post post = postRepository.findById(id).orElseThrow(() -> new InvalidRequestException(ErrorCode.ID_NOT_FOUND));
+        isTitleValid(newTitle);
+        this.checkSameTitle(newTitle);
+        isBodyValid(newBody);
+
+        Post post = postRepository.findById(id).orElseThrow(() -> new InvalidRequestException(ErrorCode.CONTENT_NOT_FOUND));
         post.setTitle(newTitle);
+        post.setBody(newBody);
         return new ContentDto(post);
     }
 
-    public ContentReadResponse searchByKeyword(String keyword){
-        if(postRepository.findByTitleContaining(keyword).isEmpty()){
-            throw new InvalidRequestException(ErrorCode.KEYWORD_NOT_FOUND);
+    @Transactional(readOnly = true)
+    public ContentReadResponse searchByUser(Long id){
+        if(!userRepository.existsById(id)){
+            throw new InvalidRequestException(ErrorCode.USER_NOT_FOUND);
         }
-        return new ContentReadResponse(postRepository.findByTitleContaining(keyword).stream().map(ContentDto::new).toList());
+        return new ContentReadResponse(postRepository.findAllByUser_IdOrderByPostTimeDesc(id).stream().map(ContentListDto::new).toList());
     }
 
-    public void checkSameTitle(String title){
+    @Transactional(readOnly = true)
+    public ContentReadResponse searchByKeyword(String keyword){
+        if(!postRepository.existsByTitleContaining(keyword)){
+            throw new InvalidRequestException(ErrorCode.KEYWORD_NOT_FOUND);
+        }
+        return new ContentReadResponse(postRepository.findAllByTitleContaining(keyword).stream().map(ContentListDto::new).toList());
+    }
+
+    private void checkSameTitle(String title){
         if(postRepository.existsByTitle(title)){
             throw new InvalidRequestException(ErrorCode.DUPLICATE_TITLE);
         }
