@@ -2,6 +2,7 @@ package org.sopt.domain;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +17,6 @@ public class Post {
     @JoinColumn(name = "user_id")
     private User user;
 
-    @CreationTimestamp
     @Column(name="post_time", nullable = false)
     private LocalDateTime postTime;
 
@@ -30,7 +30,8 @@ public class Post {
     }
 
     @PrePersist
-    protected void OnCreate(){
+    @PreUpdate
+    protected void onChange() {
         this.postTime = LocalDateTime.now();
     }
 
@@ -56,5 +57,9 @@ public class Post {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public void setBody(String body) {
+        this.body = body;
     }
 }

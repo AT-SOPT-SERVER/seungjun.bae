@@ -80,12 +80,15 @@ public class PostService {
     @Transactional
     public ContentDto updateTitleById(Long id, ContentCreateRequest request){
         String newTitle = request.title();
-        //제목 유효성검사
+        String newBody = request.body();
+
         isTitleValid(newTitle);
         this.checkSameTitle(newTitle);
+        isBodyValid(newBody);
 
         Post post = postRepository.findById(id).orElseThrow(() -> new InvalidRequestException(ErrorCode.CONTENT_NOT_FOUND));
         post.setTitle(newTitle);
+        post.setBody(newBody);
         return new ContentDto(post);
     }
 
