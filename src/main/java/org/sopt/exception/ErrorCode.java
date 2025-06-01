@@ -3,6 +3,7 @@ package org.sopt.exception;
 import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {
+    //게시글 작성 관련
     EMPTY_TITLE(HttpStatus.BAD_REQUEST, "제목을 입력해주세요"),
     LONG_TITLE(HttpStatus.BAD_REQUEST, "제목은 최대 30자까지 작성할 수 있어요"),
     EMPTY_BODY(HttpStatus.BAD_REQUEST, "내용을 입력해주세요"),
@@ -12,11 +13,14 @@ public enum ErrorCode {
     CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 게시글 ID 입니다."),
     KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 키워드를 포함하는 게시물이 없습니다."),
 
+    //유저 관련
     EMPTY_NAME(HttpStatus.BAD_REQUEST, "이름을 입력해주세요"),
     LONG_NAME(HttpStatus.BAD_REQUEST, "이름은 최대 10자입니다."),
-
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 유저 ID 입니다."),
-    EMPTY_USER(HttpStatus.NOT_FOUND, "유저 ID를 입력해주세요.")
+    EMPTY_USER(HttpStatus.NOT_FOUND, "유저 ID를 입력해주세요."),
+
+    //댓글 관련
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다.")
     ;
 
     private final HttpStatus status;

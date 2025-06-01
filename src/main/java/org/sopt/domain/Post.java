@@ -1,11 +1,12 @@
 package org.sopt.domain;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
+@Getter
 @Entity
 public class Post {
     @Id
@@ -19,6 +20,9 @@ public class Post {
 
     @Column(name="post_time", nullable = false)
     private LocalDateTime postTime;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Comment> comments;
 
     public Post(){
     }
@@ -35,24 +39,10 @@ public class Post {
         this.postTime = LocalDateTime.now();
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return this.title;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public String getBody() {
-        return body;
-    }
-
-    public LocalDateTime getPostTime() {
-        return postTime;
+    //댓글 연관관계 편의 메서드
+    public void addComment(Comment comment) {
+        this.comments.add(comment);
+        comment.setPost(this);
     }
 
     public void setTitle(String title) {
