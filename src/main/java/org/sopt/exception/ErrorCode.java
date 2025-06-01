@@ -12,6 +12,8 @@ public enum ErrorCode {
     DUPLICATE_TITLE(HttpStatus.BAD_REQUEST, "같은 제목의 게시물이 이미 존재합니다."),
     CONTENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 게시글 ID 입니다."),
     KEYWORD_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 키워드를 포함하는 게시물이 없습니다."),
+    POST_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 게시글에 좋아요를 누른 적이 없습니다."),
+    CONTENT_ALREADY_LIKED(HttpStatus.CONFLICT, "이미 좋아요를 누른 게시글입니다."),
 
     //유저 관련
     EMPTY_NAME(HttpStatus.BAD_REQUEST, "이름을 입력해주세요"),
@@ -20,7 +22,9 @@ public enum ErrorCode {
     EMPTY_USER(HttpStatus.NOT_FOUND, "유저 ID를 입력해주세요."),
 
     //댓글 관련
-    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다.")
+    COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "존재하지 않는 댓글입니다."),
+    COMMENT_LIKE_NOT_FOUND(HttpStatus.NOT_FOUND, "해당 댓글에 좋아요를 누른 적이 없습니다."),
+    COMMENT_ALREADY_LIKED(HttpStatus.BAD_REQUEST, "좋아요를 이미 누른 댓글입니다."),
     ;
 
     private final HttpStatus status;

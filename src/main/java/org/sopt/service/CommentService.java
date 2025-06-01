@@ -1,9 +1,7 @@
 package org.sopt.service;
 
 import lombok.RequiredArgsConstructor;
-import org.sopt.domain.Comment;
-import org.sopt.domain.Post;
-import org.sopt.domain.User;
+import org.sopt.domain.*;
 import org.sopt.dto.request.CommentCreateRequest;
 import org.sopt.dto.request.CommentUpdateRequest;
 import org.sopt.dto.response.CommentCreateResponse;
@@ -12,6 +10,7 @@ import org.sopt.dto.response.CommentReadResponse;
 import org.sopt.dto.response.CommentUpdateResponse;
 import org.sopt.exception.ErrorCode;
 import org.sopt.exception.InvalidRequestException;
+import org.sopt.repository.CommentLikeRepository;
 import org.sopt.repository.CommentRepository;
 import org.sopt.repository.PostRepository;
 import org.sopt.repository.UserRepository;
@@ -28,6 +27,7 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final CommentLikeRepository commentLikeRepository;
 
     @Transactional
     public CommentCreateResponse createComment(CommentCreateRequest request, Long postId, Long userId) {
@@ -61,5 +61,24 @@ public class CommentService {
             throw new InvalidRequestException(ErrorCode.COMMENT_NOT_FOUND);
         }
         commentRepository.deleteById(commentId);
+    }
+
+    @Transactional
+    public void likeComment(Long commentId, Long userId) {
+        Comment comment = commentRepository.findById(commentId).orElseThrow(() -> new InvalidRequestException(ErrorCode.COMMENT_NOT_FOUND));
+        User user = userRepository.findById(userId).orElseThrow(() -> new InvalidRequestException(ErrorCode.USER_NOT_FOUND));
+        boolean alreadyLiked = commentLikeRepository.findByUser_IdAndComment_Id(userId, commentId).isPresent();
+        if (alreadyLiked) {
+            throw new InvalidRequestException(ErrorCode.COMMENT_ALREADY_LIKED); // 커스텀 에러코드
+        }
+        CommentLike commentLike = CommentLike.builder().user(user).comment(comment).build();
+        commentLikeRepository.save(commentLike);
+    }
+
+    @Transactional
+    public void unlikeComment(Long commentId, Long userId) {
+        CommentLike commentLike = commentLikeRepository.findByUser_IdAndComment_Id(userId, commentId)
+                .orElseThrow(() -> new InvalidRequestException(ErrorCode.POST_LIKE_NOT_FOUND));
+        commentLikeRepository.delete(commentLike);
     }
 }

@@ -10,6 +10,8 @@ public enum SuccessCode {
     GET_SPECIFIC_CONTENT(HttpStatus.OK, "게시글 상세 조회"),
     DELETE_CONTENT(HttpStatus.OK, "게시글이 삭제되었습니다."),
     UPDATE_CONTENT(HttpStatus.OK,"게시물이 수정되었습니다."),
+    LIKE_CONTENT(HttpStatus.OK, "게시물을 좋아합니다."),
+    UNLIKE_CONTENT(HttpStatus.OK, "게시글 좋아요가 취소되었습니다."),
 
     //유저 관련
     CREATE_USER(HttpStatus.CREATED, "회원가입이 정상적으로 완료되었습니다."),
@@ -18,7 +20,9 @@ public enum SuccessCode {
     CREATE_COMMENT(HttpStatus.CREATED, "댓글이 작성되었습니다."),
     GET_ALL_COMMENT(HttpStatus.OK, "해당 게시글에 대한 전체 댓글이 조회되었습니다."),
     UPDATE_COMMENT(HttpStatus.OK, "댓글이 수정되었습니다."),
-    DELETE_COMMENT(HttpStatus.OK, "댓글이 삭제되었습니다.");
+    DELETE_COMMENT(HttpStatus.OK, "댓글이 삭제되었습니다."),
+    LIKE_COMMENT(HttpStatus.OK, "댓글을 좋아합니다."),
+    UNLIKE_COMMENT(HttpStatus.OK, "댓글 좋아요가 취소되었습니다.");
 
     private final HttpStatus status;
     private final String message;

@@ -1,6 +1,8 @@
 package org.sopt.service;
 
+import lombok.RequiredArgsConstructor;
 import org.sopt.domain.Post;
+import org.sopt.domain.PostLike;
 import org.sopt.domain.User;
 import org.sopt.dto.ContentDto;
 import org.sopt.dto.ContentListDto;
@@ -9,6 +11,7 @@ import org.sopt.dto.response.ContentCreateResponse;
 import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.exception.ErrorCode;
 import org.sopt.exception.InvalidRequestException;
+import org.sopt.repository.PostLikeRepository;
 import org.sopt.repository.PostRepository;
 import org.sopt.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -20,17 +23,14 @@ import static org.sopt.util.Validator.PostValidator.isBodyValid;
 import static org.sopt.util.Validator.PostValidator.isTitleValid;
 import static org.sopt.util.Validator.UserValidator.isIdValid;
 
+@RequiredArgsConstructor
 @Service
 public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
+    private final PostLikeRepository postLikeRepository;
 
 //    private LocalDateTime latestPostTime = null;
-
-    public PostService(PostRepository postRepository, UserRepository userRepository) {
-        this.postRepository = postRepository;
-        this.userRepository = userRepository;
-    }
 
     @Transactional
     public ContentCreateResponse createPost(ContentCreateRequest request, Long userId) {
@@ -106,6 +106,25 @@ public class PostService {
             throw new InvalidRequestException(ErrorCode.KEYWORD_NOT_FOUND);
         }
         return new ContentReadResponse(postRepository.findAllByTitleContaining(keyword).stream().map(ContentListDto::new).toList());
+    }
+
+    @Transactional
+    public void likePost(Long contentId, Long userId) {
+        Post post = postRepository.findById(contentId).orElseThrow(() -> new InvalidRequestException(ErrorCode.CONTENT_NOT_FOUND));
+        User user = userRepository.findById(userId).orElseThrow(() -> new InvalidRequestException(ErrorCode.USER_NOT_FOUND));
+        boolean alreadyLiked = postLikeRepository.findByUser_IdAndPost_Id(userId, contentId).isPresent();
+        if (alreadyLiked) {
+            throw new InvalidRequestException(ErrorCode.CONTENT_ALREADY_LIKED); // 커스텀 에러코드
+        }
+        PostLike postLike = PostLike.builder().user(user).post(post).build();
+        postLikeRepository.save(postLike);
+    }
+
+    @Transactional
+    public void unlikePost(Long contentId, Long userId) {
+        PostLike postLike = postLikeRepository.findByUser_IdAndPost_Id(userId, contentId)
+                .orElseThrow(() -> new InvalidRequestException(ErrorCode.POST_LIKE_NOT_FOUND));
+        postLikeRepository.delete(postLike);
     }
 
     private void checkSameTitle(String title){

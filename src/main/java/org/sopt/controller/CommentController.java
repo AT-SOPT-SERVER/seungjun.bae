@@ -42,4 +42,16 @@ public class CommentController {
         commentService.deleteComment(commentId);
         return success(SuccessCode.DELETE_COMMENT.getStatus(), SuccessCode.DELETE_COMMENT.getMessage(), null);
     }
+
+    @PostMapping("/comments/{commentId}/like")
+    public ResponseEntity<ApiResponse<Void>> likePost(@PathVariable Long commentId, @RequestHeader Long userId){
+        commentService.likeComment(commentId, userId);
+        return success(SuccessCode.LIKE_COMMENT.getStatus(), SuccessCode.LIKE_COMMENT.getMessage(), null);
+    }
+
+    @DeleteMapping("/comments/{commentId}/unlike")
+    public ResponseEntity<ApiResponse<Void>> unlikePost(@PathVariable Long commentId, @RequestHeader Long userId){
+        commentService.unlikeComment(commentId, userId);
+        return success(SuccessCode.UNLIKE_COMMENT.getStatus(), SuccessCode.UNLIKE_COMMENT.getMessage(), null);
+    }
 }
