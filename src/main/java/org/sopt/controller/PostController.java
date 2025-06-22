@@ -1,12 +1,16 @@
 package org.sopt.controller;
 
 import org.sopt.dto.ContentDto;
+import org.sopt.dto.ContentListDto;
 import org.sopt.dto.request.ContentCreateRequest;
 import org.sopt.dto.response.ApiResponse;
 import org.sopt.dto.response.ContentCreateResponse;
-import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.exception.SuccessCode;
 import org.sopt.service.PostService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,17 +30,17 @@ public class PostController {
     }
 
     @GetMapping("/api/v1/contents")
-    public ResponseEntity<ApiResponse<ContentReadResponse>> getAllPosts(@RequestHeader(required = false) Long userId, @RequestParam(required = false) String keyword){
+    public ResponseEntity<ApiResponse<Page<ContentListDto>>> getAllPosts(@PageableDefault(size=10, sort="postTime",direction = Sort.Direction.DESC) Pageable pageable, @RequestHeader(required = false) Long userId, @RequestParam(required = false) String keyword){
         //user기준 검색
         if(userId!=null){
-            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByUser(userId));
+            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByUser(userId, pageable));
         }
         //키워드 검색
         if(keyword != null && !keyword.isBlank()){
-            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByKeyword(keyword));
+            return success(SuccessCode.SEARCH_KEYWORD.getStatus(), SuccessCode.SEARCH_KEYWORD.getMessage(), postService.searchByKeyword(keyword, pageable));
         }
         //전체 게시글 조회
-        return success(SuccessCode.GET_ALL_CONTENT.getStatus(), SuccessCode.GET_ALL_CONTENT.getMessage(), postService.getAllPosts());
+        return success(SuccessCode.GET_ALL_CONTENT.getStatus(), SuccessCode.GET_ALL_CONTENT.getMessage(), postService.getAllPosts(pageable));
     }
 
     @GetMapping("/api/v1/contents/{contentId}")

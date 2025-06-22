@@ -43,6 +43,7 @@ public class Post {
         return this.title;
     }
 
+
     public User getUser() {
         return user;
     }

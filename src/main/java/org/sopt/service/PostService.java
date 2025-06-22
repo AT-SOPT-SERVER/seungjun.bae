@@ -6,15 +6,14 @@ import org.sopt.dto.ContentDto;
 import org.sopt.dto.ContentListDto;
 import org.sopt.dto.request.ContentCreateRequest;
 import org.sopt.dto.response.ContentCreateResponse;
-import org.sopt.dto.response.ContentReadResponse;
 import org.sopt.exception.ErrorCode;
 import org.sopt.exception.InvalidRequestException;
 import org.sopt.repository.PostRepository;
 import org.sopt.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 import static org.sopt.util.Validator.PostValidator.isBodyValid;
 import static org.sopt.util.Validator.PostValidator.isTitleValid;
@@ -57,10 +56,9 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public ContentReadResponse getAllPosts() {
-        List<Post> rawContents = postRepository.findAllByOrderByPostTimeDesc();
-        List<ContentListDto> contents = rawContents.stream().map(ContentListDto::new).toList();
-        return new ContentReadResponse(contents);
+    public Page<ContentListDto> getAllPosts(Pageable pageable) {
+        Page<Post> contents = postRepository.findAllByOrderByPostTimeDesc(pageable);
+        return contents.map(ContentListDto::new);
     }
 
     @Transactional(readOnly = true)
@@ -93,19 +91,21 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public ContentReadResponse searchByUser(Long id){
-        if(!userRepository.existsById(id)){
+    public Page<ContentListDto> searchByUser(Long userId, Pageable pageable){
+        if(!userRepository.existsById(userId)){
             throw new InvalidRequestException(ErrorCode.USER_NOT_FOUND);
         }
-        return new ContentReadResponse(postRepository.findAllByUser_IdOrderByPostTimeDesc(id).stream().map(ContentListDto::new).toList());
+        Page<Post> userPost = postRepository.findAllByUser_IdOrderByPostTimeDesc(userId, pageable);
+        return userPost.map(ContentListDto::new);
     }
 
     @Transactional(readOnly = true)
-    public ContentReadResponse searchByKeyword(String keyword){
+    public Page<ContentListDto> searchByKeyword(String keyword, Pageable pageable){
         if(!postRepository.existsByTitleContaining(keyword)){
             throw new InvalidRequestException(ErrorCode.KEYWORD_NOT_FOUND);
         }
-        return new ContentReadResponse(postRepository.findAllByTitleContaining(keyword).stream().map(ContentListDto::new).toList());
+        Page<Post> keywordPost = postRepository.findAllByTitleContainingOrderByPostTimeDesc(keyword, pageable);
+        return keywordPost.map(ContentListDto::new);
     }
 
     private void checkSameTitle(String title){
